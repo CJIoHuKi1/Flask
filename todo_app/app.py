@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 app = Flask(__name__)
 
@@ -23,16 +23,26 @@ tasks = load_tasks()
 def index():
     return render_template('index.html', tasks=tasks)
 
+# ДОПОЛНИТЕЛЬНЫЕ ЗАДАНИЯ: маршруты для фильтрации
+@app.route('/active')
+def show_active():
+    """Показывает только активные (невыполненные) задачи"""
+    active_tasks = [task for task in tasks if not task.get('done', False)]
+    return render_template('index.html', tasks=active_tasks)
+
+@app.route('/completed')
+def show_completed():
+    """Показывает только выполненные задачи"""
+    completed_tasks = [task for task in tasks if task.get('done', False)]
+    return render_template('index.html', tasks=completed_tasks)
+
 @app.route('/add', methods=['POST'])
 def add_task():
-    new_task_text = request.form['task']
-    if new_task_text:
-        # задание 3: добавляем дату создания
-        new_task = {
-            'text': new_task_text,
-            'date': datetime.now().strftime('%Y-%m-%d %H:%M')
-        }
-        tasks.append(new_task)
+    new_task = request.form.get('task')
+    if new_task:
+        today = date.today().strftime('%Y-%m-%d')
+        # Новая структура задачи с полем done
+        tasks.append({'text': new_task, 'date': today, 'done': False})
         save_tasks(tasks)
     return redirect('/')
 
@@ -43,9 +53,36 @@ def delete_task(task_id):
         save_tasks(tasks)
     return redirect('/')
 
+@app.route('/toggle/<int:task_id>')
+def toggle_task(task_id):
+    """Переключает статус выполнения задачи"""
+    if 0 <= task_id < len(tasks):
+        # Переключаем значение done на противоположное
+        tasks[task_id]['done'] = not tasks[task_id].get('done', False)
+        save_tasks(tasks)
+    return redirect('/')
+
 @app.route('/clear', methods=['POST'])
 def clear_all():
     tasks.clear()
+    save_tasks(tasks)
+    return redirect('/')
+
+# ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ 3: Выполнить все задачи
+@app.route('/complete-all', methods=['POST'])
+def complete_all():
+    """Отмечает все задачи как выполненные"""
+    for task in tasks:
+        task['done'] = True
+    save_tasks(tasks)
+    return redirect('/')
+
+# ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ 4: Отменить все задачи
+@app.route('/uncomplete-all', methods=['POST'])
+def uncomplete_all():
+    """Снимает отметку выполнения со всех задач"""
+    for task in tasks:
+        task['done'] = False
     save_tasks(tasks)
     return redirect('/')
 
@@ -58,7 +95,6 @@ def edit_task(task_id):
     
     if request.method == 'POST':
         new_text = request.form.get('task', '').strip()
-        
         old_text = task['text']
         
         if new_text == '':

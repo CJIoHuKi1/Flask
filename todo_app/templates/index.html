@@ -6,10 +6,10 @@
         body {
             font-family: Arial;
             margin: 40px;
-            background-color: #f0f0f0;   /* задание 2: светло-серый фон */
+            background-color: #f0f0f0;
         }
         h1 {
-            color: blue;                  /* задание 2: синий заголовок */
+            color: blue;
         }
         .done {
             text-decoration: line-through;
@@ -30,17 +30,58 @@
             padding: 5px 10px;
             cursor: pointer;
         }
+        .filter-buttons {
+            margin: 20px 0;
+        }
+        .filter-buttons a, .filter-buttons button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .complete-all-btn {
+            background-color: #28a745 !important;
+        }
+        .uncomplete-all-btn {
+            background-color: #ffc107 !important;
+            color: black !important;
+        }
     </style>
 </head>
 <body>
     <h1>Мои задачи</h1>
+    
+    <!-- Счётчик невыполненных задач -->
+    <p>📊 Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}</p>
+    
+    <!-- Кнопки фильтрации (Дополнительные задания 1 и 2) -->
+    <div class="filter-buttons">
+        <a href="/">Все</a>
+        <a href="/active">🟢 Активные</a>
+        <a href="/completed">Выполненные</a>
+    </div>
+    
     <ul>
         {% for task in tasks %}
         <li>
-    {{ task.text }} 
-    <small>({{ task.date }})</small>
-    <a href="/edit/{{ loop.index0 }}">Редактировать</a>
-    <a href="/delete/{{ loop.index0 }}">Удалить</a>
+            {% if task.done %}
+                <s>{{ task.text }}</s>
+            {% else %}
+                {{ task.text }}
+            {% endif %}
+            — <small>{{ task.date }}</small>
+            
+            {% if not task.done %}
+                <a href="/toggle/{{ loop.index0 }}">Выполнить</a>
+            {% else %}
+                <a href="/toggle/{{ loop.index0 }}">Отменить</a>
+            {% endif %}
+            <a href="/edit/{{ loop.index0 }}">Редактировать</a>
+            <a href="/delete/{{ loop.index0 }}">Удалить</a>
         </li>
         {% endfor %}
     </ul>
@@ -51,7 +92,15 @@
         <button type="submit">Добавить</button>
     </form>
 
-    <!-- задание 1: кнопка "Очистить всё" -->
+    <!-- Кнопки массовых операций -->
+    <form method="POST" action="/complete-all" style="display: inline;">
+        <button type="submit" class="complete-all-btn">Выполнить все</button>
+    </form>
+    
+    <form method="POST" action="/uncomplete-all" style="display: inline;">
+        <button type="submit" class="uncomplete-all-btn">Отменить все</button>
+    </form>
+    
     <form method="POST" action="/clear">
         <button type="submit" class="clear-btn">Очистить всё</button>
     </form>
