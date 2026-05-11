@@ -4,7 +4,7 @@
     <title>Редактировать задачу</title>
     <style>
         body { font-family: Arial; margin: 40px; }
-        input, button { padding: 8px; margin: 5px; }
+        input, select, button { padding: 8px; margin: 5px; }
         .error { color: red; }
         .message { color: orange; }
     </style>
@@ -18,6 +18,20 @@
     
     <form method="POST">
         <input type="text" name="task" value="{{ task.text }}" required>
+        
+        <!-- ДОБАВЛЕНО: Выпадающий список для выбора приоритета с автовыбором текущего значения -->
+        <select name="priority">
+            <option value="высокий" {% if task.priority == 'высокий' %}selected{% endif %}>
+                🔴 Высокий
+            </option>
+            <option value="средний" {% if task.priority == 'средний' %}selected{% endif %}>
+                🟡 Средний
+            </option>
+            <option value="низкий" {% if task.priority == 'низкий' %}selected{% endif %}>
+                🟢 Низкий
+            </option>
+        </select>
+        
         <button type="submit">Сохранить</button>
         <a href="/">Отмена</a>
     </form>

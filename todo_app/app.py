@@ -23,7 +23,6 @@ tasks = load_tasks()
 def index():
     return render_template('index.html', tasks=tasks)
 
-# ДОПОЛНИТЕЛЬНЫЕ ЗАДАНИЯ: маршруты для фильтрации
 @app.route('/active')
 def show_active():
     """Показывает только активные (невыполненные) задачи"""
@@ -36,13 +35,45 @@ def show_completed():
     completed_tasks = [task for task in tasks if task.get('done', False)]
     return render_template('index.html', tasks=completed_tasks)
 
+# НОВЫЙ МАРШРУТ: Сортировка по приоритету
+@app.route('/by_priority')
+def by_priority():
+    """Сортирует все задачи по приоритету (высокий → средний → низкий)"""
+    priority_order = {'высокий': 3, 'средний': 2, 'низкий': 1}
+    sorted_tasks = sorted(
+        tasks,
+        key=lambda task: priority_order.get(task.get('priority', 'средний'), 2),
+        reverse=True
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+
+# НОВЫЙ МАРШРУТ: Активные задачи, отсортированные по приоритету
+@app.route('/by_priority_active')
+def by_priority_active():
+    """Показывает только активные (невыполненные) задачи, отсортированные по приоритету"""
+    priority_order = {'высокий': 3, 'средний': 2, 'низкий': 1}
+    active_tasks = [task for task in tasks if not task.get('done', False)]
+    sorted_tasks = sorted(
+        active_tasks,
+        key=lambda task: priority_order.get(task.get('priority', 'средний'), 2),
+        reverse=True
+    )
+    return render_template('index.html', tasks=sorted_tasks)
+
 @app.route('/add', methods=['POST'])
 def add_task():
     new_task = request.form.get('task')
+    priority = request.form.get('priority', 'средний')  # ДОБАВЛЕНО: получаем приоритет
+    
     if new_task:
         today = date.today().strftime('%Y-%m-%d')
-        # Новая структура задачи с полем done
-        tasks.append({'text': new_task, 'date': today, 'done': False})
+        # ДОБАВЛЕНО: поле priority
+        tasks.append({
+            'text': new_task,
+            'date': today,
+            'done': False,
+            'priority': priority
+        })
         save_tasks(tasks)
     return redirect('/')
 
@@ -57,7 +88,6 @@ def delete_task(task_id):
 def toggle_task(task_id):
     """Переключает статус выполнения задачи"""
     if 0 <= task_id < len(tasks):
-        # Переключаем значение done на противоположное
         tasks[task_id]['done'] = not tasks[task_id].get('done', False)
         save_tasks(tasks)
     return redirect('/')
@@ -68,7 +98,6 @@ def clear_all():
     save_tasks(tasks)
     return redirect('/')
 
-# ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ 3: Выполнить все задачи
 @app.route('/complete-all', methods=['POST'])
 def complete_all():
     """Отмечает все задачи как выполненные"""
@@ -77,7 +106,6 @@ def complete_all():
     save_tasks(tasks)
     return redirect('/')
 
-# ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ 4: Отменить все задачи
 @app.route('/uncomplete-all', methods=['POST'])
 def uncomplete_all():
     """Снимает отметку выполнения со всех задач"""
@@ -86,6 +114,7 @@ def uncomplete_all():
     save_tasks(tasks)
     return redirect('/')
 
+# ИЗМЕНЁННЫЙ МАРШРУТ: теперь редактирует и текст, и приоритет
 @app.route('/edit/<int:task_id>', methods=['GET', 'POST'])
 def edit_task(task_id):
     if task_id < 0 or task_id >= len(tasks):
@@ -95,19 +124,23 @@ def edit_task(task_id):
     
     if request.method == 'POST':
         new_text = request.form.get('task', '').strip()
+        new_priority = request.form.get('priority', 'средний')  # ДОБАВЛЕНО
         old_text = task['text']
+        old_priority = task.get('priority', 'средний')  # ДОБАВЛЕНО
         
         if new_text == '':
             return render_template('edit.html', task=task, message="Текст не может быть пустым!")
         
-        if new_text == old_text:
+        # ИЗМЕНЕНО: проверяем оба поля
+        if new_text == old_text and new_priority == old_priority:
             return render_template('edit.html', task=task, message="Ничего не изменено")
         
-        tasks[task_id]['text'] = new_text
+        task['text'] = new_text
+        task['priority'] = new_priority  # ДОБАВЛЕНО
         save_tasks(tasks)
         return redirect('/')
     
-    return render_template('edit.html', task=tasks[task_id])
+    return render_template('edit.html', task=task)
 
 if __name__ == '__main__':
     app.run(debug=True)

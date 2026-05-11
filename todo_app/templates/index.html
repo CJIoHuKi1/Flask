@@ -21,6 +21,8 @@
         }
         li {
             margin: 10px 0;
+            padding: 8px;
+            border-radius: 5px;
         }
         button.clear-btn {
             margin-top: 20px;
@@ -50,29 +52,82 @@
             background-color: #ffc107 !important;
             color: black !important;
         }
+        
+        /* ДОБАВЛЕНО: Стили для приоритетов */
+        .priority-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .priority-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .priority-low {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        /* ДОБАВЛЕНО: Подсветка строки в зависимости от приоритета */
+        li.high {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        li.medium {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+        }
+        li.low {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+        }
     </style>
 </head>
 <body>
     <h1>Мои задачи</h1>
     
     <!-- Счётчик невыполненных задач -->
-    <p>📊 Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}</p>
+    <p>Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}</p>
     
-    <!-- Кнопки фильтрации (Дополнительные задания 1 и 2) -->
+    <!-- ДОБАВЛЕНО: Статистика по приоритетам (задание 1) -->
+    <p>
+        🔴 Высоких: {{ tasks|selectattr('priority', 'equalto', 'высокий')|list|length }} |
+        🟡 Средних: {{ tasks|selectattr('priority', 'equalto', 'средний')|list|length }} |
+        🟢 Низких: {{ tasks|selectattr('priority', 'equalto', 'низкий')|list|length }}
+    </p>
+    
+    <!-- Кнопки фильтрации (ДОБАВЛЕНЫ новые кнопки) -->
     <div class="filter-buttons">
         <a href="/">Все</a>
-        <a href="/active">🟢 Активные</a>
+        <a href="/active">Активные</a>
         <a href="/completed">Выполненные</a>
+        <a href="/by_priority">По приоритету</a>
+        <a href="/by_priority_active">Активные по приоритету</a>
     </div>
     
     <ul>
         {% for task in tasks %}
-        <li>
+        <!-- ДОБАВЛЕНЫ классы для подсветки приоритета -->
+        <li class="
+            {% if task.priority == 'высокий' %}high
+            {% elif task.priority == 'средний' %}medium
+            {% elif task.priority == 'низкий' %}low
+            {% endif %}
+        ">
             {% if task.done %}
                 <s>{{ task.text }}</s>
             {% else %}
                 {{ task.text }}
             {% endif %}
+            
+            <!-- ДОБАВЛЕНО: Отображение приоритета иконкой -->
+            {% if task.priority == 'высокий' %}
+                <span class="priority-high">🔴 Высокий</span>
+            {% elif task.priority == 'средний' %}
+                <span class="priority-medium">🟡 Средний</span>
+            {% elif task.priority == 'низкий' %}
+                <span class="priority-low">🟢 Низкий</span>
+            {% endif %}
+            
             — <small>{{ task.date }}</small>
             
             {% if not task.done %}
@@ -89,6 +144,14 @@
     <h2>Добавить задачу</h2>
     <form method="POST" action="/add">
         <input type="text" name="task" placeholder="Новая задача" required>
+        
+        <!-- ДОБАВЛЕНО: Выпадающий список для выбора приоритета -->
+        <select name="priority">
+            <option value="высокий">🔴 Высокий</option>
+            <option value="средний" selected>🟡 Средний</option>
+            <option value="низкий">🟢 Низкий</option>
+        </select>
+        
         <button type="submit">Добавить</button>
     </form>
 
