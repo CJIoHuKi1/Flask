@@ -11,10 +11,6 @@
         h1 {
             color: blue;
         }
-        .done {
-            text-decoration: line-through;
-            color: gray;
-        }
         ul {
             list-style: none;
             padding: 0;
@@ -53,7 +49,7 @@
             color: black !important;
         }
         
-        /* ДОБАВЛЕНО: Стили для приоритетов */
+        /* Стили для приоритетов */
         .priority-high {
             color: #dc3545;
             font-weight: bold;
@@ -67,7 +63,6 @@
             font-weight: bold;
         }
         
-        /* ДОБАВЛЕНО: Подсветка строки в зависимости от приоритета */
         li.high {
             background-color: #f8d7da;
             border-left: 5px solid #dc3545;
@@ -80,33 +75,89 @@
             background-color: #d4edda;
             border-left: 5px solid #28a745;
         }
+        
+        /* НОВОЕ: Стили для поиска */
+        .search-form {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .search-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .search-form button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* НОВОЕ: Стили для ссылок сортировки */
+        .sort-links {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+        }
+        .sort-links a {
+            margin-right: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .sort-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .clearfix {
+            clear: both;
+        }
     </style>
 </head>
 <body>
     <h1>Мои задачи</h1>
     
     <!-- Счётчик невыполненных задач -->
-    <p>Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}</p>
+    <p>📊 Осталось задач: {{ tasks|selectattr('done', 'equalto', False)|list|length }}</p>
     
-    <!-- ДОБАВЛЕНО: Статистика по приоритетам (задание 1) -->
+    <!-- НОВОЕ: ФОРМА ПОИСКА (ПР №7) -->
+    <form action="/search" method="get" class="search-form">
+        <input type="text" name="q" placeholder="Поиск по задачам..." value="{{ search_query or '' }}">
+        <button type="submit">🔍 Найти</button>
+        {% if search_query %}
+            <a href="/" style="padding: 8px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">Сбросить</a>
+        {% endif %}
+    </form>
+    
+    <!-- НОВОЕ: ССЫЛКИ СОРТИРОВКИ (ПР №8) -->
+    <div class="sort-links">
+        <strong>Сортировать:</strong>
+        <a href="/sort/date">📅 По дате (новые)</a> |
+        <a href="/sort/status">✅ По статусу</a> |
+        <a href="/sort/priority">⭐ По приоритету</a> |
+        <a href="/sort/alpha">🔤 По алфавиту</a>
+    </div>
+    
+    <!-- Статистика по приоритетам -->
     <p>
         🔴 Высоких: {{ tasks|selectattr('priority', 'equalto', 'высокий')|list|length }} |
         🟡 Средних: {{ tasks|selectattr('priority', 'equalto', 'средний')|list|length }} |
         🟢 Низких: {{ tasks|selectattr('priority', 'equalto', 'низкий')|list|length }}
     </p>
     
-    <!-- Кнопки фильтрации (ДОБАВЛЕНЫ новые кнопки) -->
+    <!-- Кнопки фильтрации -->
     <div class="filter-buttons">
-        <a href="/">Все</a>
-        <a href="/active">Активные</a>
-        <a href="/completed">Выполненные</a>
-        <a href="/by_priority">По приоритету</a>
-        <a href="/by_priority_active">Активные по приоритету</a>
+        <a href="/">📋 Все</a>
+        <a href="/active">🟢 Активные</a>
+        <a href="/completed">✅ Выполненные</a>
     </div>
     
     <ul>
         {% for task in tasks %}
-        <!-- ДОБАВЛЕНЫ классы для подсветки приоритета -->
         <li class="
             {% if task.priority == 'высокий' %}high
             {% elif task.priority == 'средний' %}medium
@@ -119,7 +170,7 @@
                 {{ task.text }}
             {% endif %}
             
-            <!-- ДОБАВЛЕНО: Отображение приоритета иконкой -->
+            <!-- Отображение приоритета -->
             {% if task.priority == 'высокий' %}
                 <span class="priority-high">🔴 Высокий</span>
             {% elif task.priority == 'средний' %}
@@ -131,12 +182,12 @@
             — <small>{{ task.date }}</small>
             
             {% if not task.done %}
-                <a href="/toggle/{{ loop.index0 }}">Выполнить</a>
+                <a href="/toggle/{{ loop.index0 }}">✅ Выполнить</a>
             {% else %}
-                <a href="/toggle/{{ loop.index0 }}">Отменить</a>
+                <a href="/toggle/{{ loop.index0 }}">🔄 Отменить</a>
             {% endif %}
-            <a href="/edit/{{ loop.index0 }}">Редактировать</a>
-            <a href="/delete/{{ loop.index0 }}">Удалить</a>
+            <a href="/edit/{{ loop.index0 }}">✏️ Редактировать</a>
+            <a href="/delete/{{ loop.index0 }}">❌ Удалить</a>
         </li>
         {% endfor %}
     </ul>
@@ -145,7 +196,6 @@
     <form method="POST" action="/add">
         <input type="text" name="task" placeholder="Новая задача" required>
         
-        <!-- ДОБАВЛЕНО: Выпадающий список для выбора приоритета -->
         <select name="priority">
             <option value="высокий">🔴 Высокий</option>
             <option value="средний" selected>🟡 Средний</option>
@@ -157,15 +207,15 @@
 
     <!-- Кнопки массовых операций -->
     <form method="POST" action="/complete-all" style="display: inline;">
-        <button type="submit" class="complete-all-btn">Выполнить все</button>
+        <button type="submit" class="complete-all-btn">✅ Выполнить все</button>
     </form>
     
     <form method="POST" action="/uncomplete-all" style="display: inline;">
-        <button type="submit" class="uncomplete-all-btn">Отменить все</button>
+        <button type="submit" class="uncomplete-all-btn">🔄 Отменить все</button>
     </form>
     
     <form method="POST" action="/clear">
-        <button type="submit" class="clear-btn">Очистить всё</button>
+        <button type="submit" class="clear-btn">🗑️ Очистить всё</button>
     </form>
 </body>
 </html>

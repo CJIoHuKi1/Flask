@@ -19,17 +19,10 @@
     <form method="POST">
         <input type="text" name="task" value="{{ task.text }}" required>
         
-        <!-- ДОБАВЛЕНО: Выпадающий список для выбора приоритета с автовыбором текущего значения -->
         <select name="priority">
-            <option value="высокий" {% if task.priority == 'высокий' %}selected{% endif %}>
-                🔴 Высокий
-            </option>
-            <option value="средний" {% if task.priority == 'средний' %}selected{% endif %}>
-                🟡 Средний
-            </option>
-            <option value="низкий" {% if task.priority == 'низкий' %}selected{% endif %}>
-                🟢 Низкий
-            </option>
+            <option value="высокий" {% if task.priority == 'высокий' %}selected{% endif %}>🔴 Высокий</option>
+            <option value="средний" {% if task.priority == 'средний' %}selected{% endif %}>🟡 Средний</option>
+            <option value="низкий" {% if task.priority == 'низкий' %}selected{% endif %}>🟢 Низкий</option>
         </select>
         
         <button type="submit">Сохранить</button>
